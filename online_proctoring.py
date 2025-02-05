@@ -68,6 +68,9 @@ while True:
     frame=cv2.flip(frame,1)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = detector(gray)
+    if(len(faces)==0):
+        engine.say("Warning, No face detected.")
+        engine.runAndWait()
     if len(faces)>1:
         engine.say("Warning Multiple faces detected.")
         engine.runAndWait()
