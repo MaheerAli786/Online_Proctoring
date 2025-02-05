@@ -2,6 +2,7 @@ import cv2
 import dlib
 import pyttsx3
 import numpy as np
+import threading
 
 # Function to compute eye aspect ratio (optional for blinking detection)
 def eye_aspect_ratio(eye):
@@ -41,11 +42,11 @@ def get_gaze_direction(eye):
 
     # Determine direction based on iris position
     if cx < eye_width // 3:
-        return "Looking Left"
+        return "Left"
     elif cx > 2 * eye_width // 3:
-        return "Looking Right"
+        return "Right"
     else:
-        return "Looking Center"
+        return "Center"
 
 # Load dlib's face detector and facial landmark predictor
 detector = dlib.get_frontal_face_detector()
@@ -59,7 +60,8 @@ prev_direction = None
 engine=pyttsx3.init()
 continous_right=0
 continous_left=0
-
+continous_eye_left=0
+continous_eye_right=0
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -67,6 +69,9 @@ while True:
     frame=cv2.flip(frame,1)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = detector(gray)
+    if len(faces)>1:
+        engine.say("Warning Multiple faces detected.")
+        engine.runAndWait()
     for face in faces:
         landmarks = predictor(gray, face)
 
@@ -74,10 +79,11 @@ while True:
         nose = (landmarks.part(30).x, landmarks.part(30).y)  # Nose tip
         face_center_x = (face.left() + face.right()) // 2
         face_center_y = (face.top() + face.bottom()) // 2
-        print('(',face_center_x,face_center_y,')',end=" ")
+        # print('(',face_center_x,face_center_y,')',end=" ")
 
         direction = None  # Default to None
-        print('(',nose[0],nose[1],')')
+        # print('(',nose[0],nose[1],')')
+        
         # Determine left or right movement
         if nose[0] < face_center_x - 30:
             direction = "Turned Left"
@@ -100,15 +106,20 @@ while True:
             print(direction)
             prev_direction = direction  # Update previous direction
         if continous_left>10:
+            continous_eye_right=0
             engine.say("Warning turned left")
             engine.runAndWait()
+            continue
         if continous_right>10:
+            continous_eye_left=0
             engine.say("Warning turned right")
             engine.runAndWait()
+            continue
         # Draw face landmarks (optional for visualization)
         # for i in range(68):
         #     x, y = landmarks.part(i).x, landmarks.part(i).y
         #     cv2.circle(frame, (x, y), 1, (0, 255, 255), -1)
+        
         # Get left and right eye regions
         left_eye = get_eye_region(landmarks, [36, 37, 38, 39, 40, 41])
         right_eye = get_eye_region(landmarks, [42, 43, 44, 45, 46, 47])
@@ -118,12 +129,32 @@ while True:
         right_gaze = get_gaze_direction(right_eye)
 
         # Print gaze direction if both eyes agree
-        if left_gaze == right_gaze:
-            print(f"Eye Direction: {left_gaze}")
+        if left_gaze == right_gaze=='Center':
+            continous_eye_left=0
+            continous_eye_right=0
+            # print(f"Eye Direction: {left_gaze}")
+            continue
+        elif left_gaze == right_gaze=='Left':
+            # print(f"Eye Direction: {left_gaze}")
+            continous_eye_right=0
+            continous_eye_left+=1
+        elif left_gaze == right_gaze=='Right':
+            # print(f"Eye Direction: {left_gaze}")
+            continous_eye_right+=1
+            continous_eye_left=0
+        
+        if continous_eye_left>10:
+            engine.say("Warning looking left")
+            engine.runAndWait()
+            continue
+        if continous_eye_right>10:
+            engine.say("Warning looking right")
+            engine.runAndWait()
+            continue
 
         # Draw eye landmarks
-        cv2.polylines(frame, [left_eye], True, (0, 255, 0), 1)
-        cv2.polylines(frame, [right_eye], True, (0, 255, 0), 1)
+        # cv2.polylines(frame, [left_eye], True, (0, 255, 0), 1)
+        # cv2.polylines(frame, [right_eye], True, (0, 255, 0), 1)
 
     cv2.imshow("Face Direction Detection", frame)
 
