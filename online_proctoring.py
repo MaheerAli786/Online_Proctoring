@@ -2,7 +2,6 @@ import cv2
 import dlib
 import pyttsx3
 import numpy as np
-import threading
 
 # Function to compute eye aspect ratio (optional for blinking detection)
 def eye_aspect_ratio(eye):
