@@ -82,17 +82,28 @@ while True:
         face_center_x = (face.left() + face.right()) // 2
         face_center_y = (face.top() + face.bottom()) // 2
         # print('(',face_center_x,face_center_y,')',end=" ")
+        
+        # Get left and right eye regions
+        left_eye = get_eye_region(landmarks, [36, 37, 38, 39, 40, 41])
+        right_eye = get_eye_region(landmarks, [42, 43, 44, 45, 46, 47])
 
         direction = None  # Default to None
         # print('(',nose[0],nose[1],')')
         
+        
+        # Draw eye landmarks
+        # cv2.polylines(frame, [left_eye], True, (0, 255, 0), 1)
+        # cv2.polylines(frame, [right_eye], True, (0, 255, 0), 1
+        
         # Determine left or right movement
-        if nose[0] < face_center_x - 30:
+        if nose[0] < face_center_x - 25:
             direction = "Turned Left"
             continous_left+=1
-        elif nose[0] > face_center_x + 30:
+            continous_right=0      
+        elif nose[0] > face_center_x + 25:
             direction = "Turned Right"
             continous_right+=1      
+            continous_left=0      
         else:
             prev_direction=None
             continous_left=0      
@@ -107,12 +118,14 @@ while True:
         if direction and direction != prev_direction:
             print(direction)
             prev_direction = direction  # Update previous direction
-        if continous_left>10:
+        if continous_left>8:
             continous_eye_right=0
+            continous_eye_left=0
             engine.say("Warning turned left")
             engine.runAndWait()
             continue
-        if continous_right>10:
+        if continous_right>8:
+            continous_eye_right=0
             continous_eye_left=0
             engine.say("Warning turned right")
             engine.runAndWait()
@@ -122,9 +135,6 @@ while True:
         #     x, y = landmarks.part(i).x, landmarks.part(i).y
         #     cv2.circle(frame, (x, y), 1, (0, 255, 255), -1)
         
-        # Get left and right eye regions
-        left_eye = get_eye_region(landmarks, [36, 37, 38, 39, 40, 41])
-        right_eye = get_eye_region(landmarks, [42, 43, 44, 45, 46, 47])
 
         # Determine gaze direction
         left_gaze = get_gaze_direction(left_eye)
@@ -145,18 +155,15 @@ while True:
             continous_eye_right+=1
             continous_eye_left=0
         
-        if continous_eye_left>10:
+        if continous_eye_left>8:
             engine.say("Warning looking left")
             engine.runAndWait()
             continue
-        if continous_eye_right>10:
+        if continous_eye_right>8:
             engine.say("Warning looking right")
             engine.runAndWait()
             continue
 
-        # Draw eye landmarks
-        # cv2.polylines(frame, [left_eye], True, (0, 255, 0), 1)
-        # cv2.polylines(frame, [right_eye], True, (0, 255, 0), 1)
 
     cv2.imshow("Face Direction Detection", frame)
 
