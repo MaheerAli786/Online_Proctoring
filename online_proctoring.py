@@ -2,6 +2,7 @@ import cv2
 import dlib
 import pyttsx3
 import numpy as np
+from ultralytics import YOLO
 
 # Function to compute eye aspect ratio (optional for blinking detection)
 def eye_aspect_ratio(eye):
@@ -51,8 +52,14 @@ def get_gaze_direction(eye):
 detector = dlib.get_frontal_face_detector()
 predictor = dlib.shape_predictor("/Users/maheeralishaik/Mini Project/Online_Proctoring/shape_predictor_68_face_landmarks.dat")
 
+# Load YOLO model (lightweight version)
+model = YOLO("yolov8n.pt")  # YOLOv8 Nano (smallest model)
+
 # Start webcam
 cap = cv2.VideoCapture(0)
+
+cap.set(3, 640)  # Width
+cap.set(4, 480)  # Height
 
 # Store previous direction to avoid repeated prints
 prev_direction = None
@@ -61,10 +68,19 @@ continous_right=0
 continous_left=0
 continous_eye_left=0
 continous_eye_right=0
-while True:
+
+frame_skip = 3  # Process every 5rd frame to reduce CPU usage
+frame_count = 0
+
+while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
         break
+    
+    frame_count += 1
+    if frame_count % frame_skip != 0:  # Skip frames to reduce processing load
+        continue
+    
     frame=cv2.flip(frame,1)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = detector(gray)
@@ -74,6 +90,15 @@ while True:
     if len(faces)>1:
         engine.say("Warning Multiple faces detected.")
         engine.runAndWait()
+        
+    # Perform object detection with lower confidence threshold
+    results = model(frame, conf=0.5, device="cpu")  # Use CPU with lower confidence
+    # Check if a phone is detected
+    detected_objects = [model.names[int(box.cls)] for box in results[0].boxes]
+    if "cell phone" in detected_objects:
+        engine.say("Warning! Phone detected")
+        engine.runAndWait()
+    
     for face in faces:
         landmarks = predictor(gray, face)
 
@@ -96,11 +121,11 @@ while True:
         # cv2.polylines(frame, [right_eye], True, (0, 255, 0), 1
         
         # Determine left or right movement
-        if nose[0] < face_center_x - 25:
+        if nose[0] < face_center_x - 10:
             direction = "Turned Left"
             continous_left+=1
             continous_right=0      
-        elif nose[0] > face_center_x + 25:
+        elif nose[0] > face_center_x + 10:
             direction = "Turned Right"
             continous_right+=1      
             continous_left=0      
