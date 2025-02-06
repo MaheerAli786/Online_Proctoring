@@ -98,6 +98,9 @@ while cap.isOpened():
     if "cell phone" in detected_objects:
         engine.say("Warning! Phone detected")
         engine.runAndWait()
+        
+    # Show only if necessary
+    # cv2.imshow("Phone Detection", results[0].plot())
     
     for face in faces:
         landmarks = predictor(gray, face)
