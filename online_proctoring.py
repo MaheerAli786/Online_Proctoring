@@ -69,7 +69,7 @@ continous_left=0
 continous_eye_left=0
 continous_eye_right=0
 
-frame_skip = 3  # Process every 5rd frame to reduce CPU usage
+frame_skip = 3  # Process every 3rd frame to reduce CPU usage
 frame_count = 0
 
 while cap.isOpened():
@@ -87,9 +87,11 @@ while cap.isOpened():
     if(len(faces)==0):
         engine.say("Warning, No face detected.")
         engine.runAndWait()
+        continue
     if len(faces)>1:
         engine.say("Warning Multiple faces detected.")
         engine.runAndWait()
+        continue
         
     # Perform object detection with lower confidence threshold
     results = model(frame, conf=0.5, device="cpu")  # Use CPU with lower confidence
@@ -98,7 +100,7 @@ while cap.isOpened():
     if "cell phone" in detected_objects:
         engine.say("Warning! Phone detected")
         engine.runAndWait()
-        
+        continue
     # Show only if necessary
     # cv2.imshow("Phone Detection", results[0].plot())
     
@@ -136,7 +138,7 @@ while cap.isOpened():
             prev_direction=None
             continous_left=0      
             continous_right=0      
-        # # Determine up or down movement
+        # # Determine up or down movementq
         # if nose[1] < face_center_y - 20:
         #     direction = "Turned Up"
         # elif nose[1] > face_center_y + 20:
