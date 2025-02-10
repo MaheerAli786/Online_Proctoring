@@ -11,7 +11,7 @@ app = Flask(__name__)
 app.secret_key = 'Venky@123'
 # Function to create the database and tables
 def create_db():
-    connection = sqlite3.connect('instance1.db')
+    connection = sqlite3.connect('Exam Portal/instance1.db')
     cursor = connection.cursor()
 
     cursor.execute('''
@@ -43,7 +43,7 @@ def convert_to_binary(filename):
 
 
 def get_db_connection():
-    conn = sqlite3.connect('instance1.db')  # Timeout to avoid lock
+    conn = sqlite3.connect('Exam Portal/instance1.db')  # Timeout to avoid lock
     conn.row_factory = sqlite3.Row
     return conn
 
