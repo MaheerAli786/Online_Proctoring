@@ -3,6 +3,9 @@ import dlib
 import pyttsx3
 import numpy as np
 from ultralytics import YOLO
+import time
+import logging
+logging.getLogger("ultralytics").setLevel(logging.WARNING)  # Hides unnecessary info
 
 # Function to compute eye aspect ratio (optional for blinking detection)
 def eye_aspect_ratio(eye):
@@ -39,21 +42,36 @@ def get_gaze_direction(eye):
     
     cx = int(M["m10"] / M["m00"])  # Center of the contour
     eye_width = x_max - x_min
+  
+    # # Determine direction based on iris position for 3 parts
+    # if cx < eye_width // 3:
+    #     return "Left"
+    # elif cx > 2 * eye_width // 3:
+    #     return "Right"
+    # else:
+    #     return "Center"
+    
+    # Divide the eye into 5 parts
+    left_most = eye_width // 5  # 1/5 of the eye width (first segment)
+    left_mid = 2 * eye_width // 5  # 2/5 of the eye width (second segment)
+    right_mid = 3 * eye_width // 5  # 3/5 of the eye width (fourth segment)
+    right_most = 4 * eye_width // 5  # 4/5 of the eye width (fifth segment)
 
-    # Determine direction based on iris position
-    if cx < eye_width // 3:
+    # Determine gaze direction based on iris position for 5 parts
+    if cx < left_mid:  # Leftmost two sections
         return "Left"
-    elif cx > 2 * eye_width // 3:
+    elif cx > right_mid:  # Rightmost two sections
         return "Right"
-    else:
+    else:  # Center section
         return "Center"
+    
 
 # Load dlib's face detector and facial landmark predictor
 detector = dlib.get_frontal_face_detector()
-predictor = dlib.shape_predictor("/Users/maheeralishaik/Mini Project/Online_Proctoring/shape_predictor_68_face_landmarks.dat")
+predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
 
 # Load YOLO model (lightweight version)
-model = YOLO("yolov8n.pt")  # YOLOv8 Nano (smallest model)
+model = YOLO("yolov8n.pt", verbose=False)  # Suppresses model logging # YOLOv8 Nano (smallest model)
 
 # Start webcam
 cap = cv2.VideoCapture(0)
@@ -72,6 +90,10 @@ continous_eye_right=0
 frame_skip = 3  # Process every 3rd frame to reduce CPU usage
 frame_count = 0
 
+# Timers to prevent rapid repeated warnings
+last_warning_time = 0
+warning_interval = 4  # Minimum gap between two warnings (in seconds)
+
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
@@ -84,22 +106,30 @@ while cap.isOpened():
     frame=cv2.flip(frame,1)
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = detector(gray)
-    if(len(faces)==0):
+    
+    current_time = time.time()  # Get the current time
+
+    #Face detection warnings
+    if(len(faces)==0) and (current_time - last_warning_time) > warning_interval:
         engine.say("Warning, No face detected.")
         engine.runAndWait()
+        last_warning_time = current_time
         continue
-    if len(faces)>1:
+    if len(faces)>1 and (current_time - last_warning_time) > warning_interval:
         engine.say("Warning Multiple faces detected.")
         engine.runAndWait()
+        last_warning_time = current_time
         continue
         
     # Perform object detection with lower confidence threshold
     results = model(frame, conf=0.5, device="cpu")  # Use CPU with lower confidence
     # Check if a phone is detected
     detected_objects = [model.names[int(box.cls)] for box in results[0].boxes]
-    if "cell phone" in detected_objects:
+    if "cell phone" in detected_objects and (current_time - last_warning_time) > warning_interval:
+        print("Phone Detected")
         engine.say("Warning! Phone detected")
         engine.runAndWait()
+        last_warning_time = current_time
         continue
     # Show only if necessary
     # cv2.imshow("Phone Detection", results[0].plot())
@@ -118,8 +148,7 @@ while cap.isOpened():
         right_eye = get_eye_region(landmarks, [42, 43, 44, 45, 46, 47])
 
         direction = None  # Default to None
-        # print('(',nose[0],nose[1],')')
-        
+        # print('(',nose[0],nose[1],')')     
         
         # Draw eye landmarks
         # cv2.polylines(frame, [left_eye], True, (0, 255, 0), 1)
@@ -146,20 +175,26 @@ while cap.isOpened():
 
         # Print only if the direction has changed
         if direction and direction != prev_direction:
-            print(direction)
+            # print(direction)
             prev_direction = direction  # Update previous direction
-        if continous_left>8:
+        if continous_left>4 and (current_time - last_warning_time) > warning_interval:
             continous_eye_right=0
             continous_eye_left=0
+            print('turned left')
             engine.say("Warning turned left")
             engine.runAndWait()
+            last_warning_time = current_time
             continue
-        if continous_right>8:
+
+        if continous_right>4 and (current_time - last_warning_time) > warning_interval:
             continous_eye_right=0
             continous_eye_left=0
+            print('turned right')
             engine.say("Warning turned right")
             engine.runAndWait()
+            last_warning_time = current_time
             continue
+ 
         # Draw face landmarks (optional for visualization)
         # for i in range(68):
         #     x, y = landmarks.part(i).x, landmarks.part(i).y
@@ -185,13 +220,15 @@ while cap.isOpened():
             continous_eye_right+=1
             continous_eye_left=0
         
-        if continous_eye_left>8:
+        if continous_eye_left>4 and (current_time - last_warning_time) > warning_interval:
             engine.say("Warning looking left")
             engine.runAndWait()
+            last_warning_time = current_time
             continue
-        if continous_eye_right>8:
+        if continous_eye_right>4 and (current_time - last_warning_time) > warning_interval:
             engine.say("Warning looking right")
             engine.runAndWait()
+            last_warning_time = current_time
             continue
 
 
