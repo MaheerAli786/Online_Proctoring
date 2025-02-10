@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam Portal - Login</title>
+  <style>
+    /* General Styles */
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #1E90FF, #32CD32);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    /* Login Form */
+    .login-form {
+      background-color: #fff;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+      transform: translateY(30px);
+      animation: fadeInUp 1s ease-out;
+    }
+
+    .login-form h2 {
+      color: #1E90FF;
+      margin-bottom: 30px;
+      font-size: 30px;
+      font-weight: bold;
+    }
+
+    .login-form input {
+      width: 100%;
+      padding: 15px;
+      margin: 12px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+      background-color: #f9f9f9;
+      transition: border 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .login-form input:focus {
+      border-color: #1E90FF;
+      box-shadow: 0 0 10px rgba(30, 144, 255, 0.3);
+    }
+
+    .login-form button {
+      background-color: #1E90FF;
+      color: white;
+      border: none;
+      padding: 15px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      width: 100%;
+      margin-top: 15px;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    .login-form button:hover {
+      background-color: #0077cc;
+      transform: scale(1.05);
+    }
+
+    .login-form a {
+      color: #1E90FF;
+      text-decoration: none;
+      display: block;
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .login-form a:hover {
+      text-decoration: underline;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <div class="login-form">
+    <h2>Login to Your Account</h2>
+    <form action="{{ url_for('login') }}" method="POST">
+    <input type="text" placeholder="Email/Username" name="user" required>
+    <input type="password" placeholder="Password" name="password" required>
+    <button>Login</button>
+    </form>
+    <a href="#">Forgot Password?</a>
+    <!-- <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign Up</a></p> -->
+  </div>
+</body>
+</html>

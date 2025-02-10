@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* General Styles */
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #1E90FF, #007BFF);
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    header .logo {
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    header nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 15px;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    header nav a:hover {
+      color: #FFD700;
+    }
+
+    header .auth-buttons a {
+      background-color: white;
+      color: #1E90FF;
+      padding: 10px 20px;
+      border-radius: 25px;
+      text-decoration: none;
+      margin-left: 10px;
+      font-weight: 500;
+      transition: 0.3s ease;
+    }
+
+    header .auth-buttons a:hover {
+      background-color: #FFD700;
+      color: black;
+    }
+    
+    /* Profile Card */
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 80vh;
+    }
+
+    .profile-card {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      text-align: center;
+      max-width: 400px;
+    }
+
+    .title {
+      color: #1E90FF;
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    
+    .subtitle {
+      font-size: 18px;
+      color: #555;
+    }
+
+    .details {
+      margin-top: 20px;
+    }
+
+    .details p {
+      font-size: 16px;
+      margin: 8px 0;
+    }
+
+    .actions {
+      margin-top: 20px;
+    }
+
+    .btn.logout {
+      display: inline-block;
+      background-color: #FF3B30;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: 0.3s ease;
+    }
+
+    .btn.logout:hover {
+      background-color: #D32F2F;
+    }
+    
+    /* Footer */
+    footer {
+      background-color: #1E90FF;
+      color: white;
+      text-align: center;
+      padding: 20px;
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+    }
+
+    footer a {
+      color: white;
+      text-decoration: none;
+      margin: 0 10px;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Section -->
+  <header>
+    <div class="logo">Exam Portal</div>
+    <nav>
+      <a href="{{ url_for('index') }}">Home</a>
+      <a href="{{ url_for('exams') }}">Exams</a>
+      <a href="{{ url_for('results') }}">Results</a>
+      <a href="{{ url_for('view_profile') }}">Profile</a>
+    </nav>
+    <div class="auth-buttons">
+      <a href="{{ url_for('login') }}">Login</a>
+    </div>
+  </header>
+  
+  <!-- Profile Section -->
+  <div class="container">
+    <div class="profile-card">
+      <h2 class="title">User Profile</h2>
+      <h1 class="subtitle">Welcome, {{ user['username'] }}!</h1>
+      <div class="details">
+        <p><strong>Email:</strong> {{ user['email'] }}</p>
+        <p><strong>Role:</strong> {{ user['role'] }}</p>
+      </div>
+      <div class="actions">
+        <a href="{{ url_for('logout') }}" class="btn logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Section -->
+  <footer>
+    <p>&copy; 2025 Exam Portal. All rights reserved.</p>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Portal - Math Exam</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        
+        /* Header */
+        header {
+            background-color: #1E90FF;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        header h2 {
+            margin: 0;
+        }
+        
+        /* Exam Container */
+        .exam-container {
+            display: flex;
+            padding: 20px;
+        }
+        
+        /* Question Panel */
+        .question-panel {
+            flex: 3;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-right: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .question-panel h3 {
+            color: #1E90FF;
+            margin-bottom: 20px;
+        }
+        .question-panel input[type="radio"] {
+            margin-right: 10px;
+        }
+        .question-panel label {
+            display: block;
+            margin: 10px 0;
+        }
+        
+        /* Navigation Panel */
+        .navigation-panel {
+            flex: 1;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .navigation-panel button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #1E90FF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .navigation-panel button:hover {
+            background-color: #0077cc;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #1E90FF;
+            color: white;
+        }
+        footer button {
+            background-color: white;
+            color: #1E90FF;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 0 10px;
+            transition: background-color 0.3s ease;
+        }
+        footer button:hover {
+            background-color: #f0f0f0;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <h2>Math Exam</h2>
+        <div>Time Left: <span id="timer">30:00</span></div>
+    </header>
+    
+    <!-- Exam Container -->
+    <div class="exam-container">
+        <!-- Question Panel -->
+        <div class="question-panel">
+            <h3 id="question-title">Question 1</h3>
+            <p id="question-text">What is 2 + 2?</p>
+            <label>
+                <input type="radio" name="q1" value="3"> 3
+            </label>
+            <label>
+                <input type="radio" name="q1" value="4"> 4
+            </label>
+            <label>
+                <input type="radio" name="q1" value="5"> 5
+            </label>
+            
+            <!-- Additional Questions -->
+            <div id="question-2" style="display: none;">
+                <h3>Question 2</h3>
+                <p>What is 5 * 5?</p>
+                <label>
+                    <input type="radio" name="q2" value="24"> 24
+                </label>
+                <label>
+                    <input type="radio" name="q2" value="25"> 25
+                </label>
+                <label>
+                    <input type="radio" name="q2" value="26"> 26
+                </label>
+        </div>
+        
+        <div id="question-3" style="display: none;">
+            <h3>Question 3</h3>
+            <p>What is 10 - 3?</p>
+            <label>
+                <input type="radio" name="q3" value="6"> 6
+            </label>
+            <label>
+                <input type="radio" name="q3" value="7"> 7
+            </label>
+            <label>
+                <input type="radio" name="q3" value="8"> 8
+            </label>
+        </div>
+        
+        <div id="question-4" style="display: none;">
+            <h3>Question 4</h3>
+            <p>What is 7 * 3?</p>
+            <label>
+                <input type="radio" name="q4" value="20"> 20
+            </label>
+            <label>
+                <input type="radio" name="q4" value="21"> 21
+            </label>
+            <label>
+                <input type="radio" name="q4" value="22"> 22
+            </label>
+        </div>
+        
+        <div id="question-5" style="display: none;">
+            <h3>Question 5</h3>
+            <p>What is 9 - 2?</p>
+            <label>
+                <input type="radio" name="q5" value="6"> 6
+            </label>
+            <label>
+                <input type="radio" name="q5" value="7"> 7
+            </label>
+            <label>
+                <input type="radio" name="q5" value="8"> 8
+            </label>
+        </div>
+    </div>
+    
+    <!-- Navigation Panel -->
+    <div class="navigation-panel">
+        <button onclick="showQuestion(1)">1</button>
+        <button onclick="showQuestion(2)">2</button>
+        <button onclick="showQuestion(3)">3</button>
+        <button onclick="showQuestion(4)">4</button>
+        <button onclick="showQuestion(5)">5</button>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer>
+    <button onclick="saveAndExit()">Save and Exit</button>
+    <button onclick="endExam()">End Exam</button>
+</footer>
+
+<!-- Timer Script -->
+<script>
+    let timeLeft = 30 * 60; // 30 minutes in seconds
+    const timerElement = document.getElementById('timer');
+    const updateTimer = () => {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerElement.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        if (timeLeft <= 0) {
+            clearInterval(interval);
+            alert('Time is up! Your exam will be submitted automatically.');
+            endExam();
+        } else {
+            timeLeft--;
+        }
+    };
+    const interval = setInterval(updateTimer, 1000);
+</script>
+
+<!-- Navigation Script -->
+<script>
+    const showQuestion = (questionNumber) => {
+        const questionTitleElement = document.getElementById('question-title');
+        const questionTextElement = document.getElementById('question-text');
+        const questionElement = document.getElementById(`question-${questionNumber}`);
+        
+        questionTitleElement.textContent = `Question ${questionNumber}`;
+        questionTextElement.textContent = questionElement.querySelector('p').textContent;
+        
+        // Hide all questions
+        for (let i = 1; i <= 5; i++) {
+            document.getElementById(`question-${i}`).style.display = 'none';
+        }
+        
+        // Show the selected question
+        questionElement.style.display = 'block';
+    };
+</script>
+
+<!-- Save and Exit Script -->
+<script>
+    const saveAndExit = () => {
+        if (confirm('Are you sure you want to save and exit?')) {
+            alert('Your progress has been saved. You can resume later.');
+            window.location.href = "{{ url_for('index') }}"; // Redirect to homepage
+        }
+    };
+</script>
+
+<!-- End Exam Script -->
+<script>
+    const endExam = () => {
+        if (confirm('Are you sure you want to end the exam?')) {
+            alert('Your exam has been submitted. Good luck!');
+            window.location.href = "{{ url_for('index') }}"; // Redirect to results page
+        }
+    };
+</script>
+
+</body>
+</html>
