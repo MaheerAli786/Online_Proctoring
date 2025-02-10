@@ -42,20 +42,21 @@
       color: #FFD700;
     }
 
-    header .auth-buttons a {
-      background-color: white;
-      color: #1E90FF;
-      padding: 10px 20px;
-      border-radius: 25px;
-      text-decoration: none;
-      margin-left: 10px;
-      font-weight: 500;
-      transition: 0.3s ease;
+    /* Auth Section */
+    header .auth-buttons {
+      display: flex;
+      align-items: center;
     }
 
-    header .auth-buttons a:hover {
-      background-color: #FFD700;
-      color: black;
+    header .auth-buttons img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+
+    header .auth-buttons span {
+      font-weight: bold;
     }
 
     /* Hero Section */
@@ -159,8 +160,14 @@
       <a href="{{ url_for('view_profile') }}">Profile</a>
     </nav>
     <div class="auth-buttons">
-      <a href="{{ url_for('login') }}">Login</a>
-      <!-- <a href="{{ url_for('signup') }}">Signup</a> -->
+      <div class="profile-image">
+        {% if user.photo %}
+          <img src="data:image/jpeg;base64,{{ user.photo }}" alt="Profile Photo">
+        {% else %}
+          <img src="/static/default_profile.jpg" alt="Default Profile Photo">
+        {% endif %}
+      </div>
+      <span>{{ user.full_name }}</span>
     </div>
   </header>
 
@@ -168,10 +175,7 @@
     <h1>Welcome to Exam Portal</h1>
     <p>Your one-stop solution for online exams and results.</p>
     <button onclick="window.location.href='{{ url_for('maths_exam') }}'">Get Started</button>
-
   </section>
-
-  
 
   <section class="section">
     <h2>Announcements</h2>

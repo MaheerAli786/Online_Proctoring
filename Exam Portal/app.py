@@ -1,178 +1,63 @@
 import sqlite3
 from flask import Flask, render_template, request, redirect, flash ,url_for, session
-from faker import Faker
 import random
 from datetime import datetime, timedelta
 import json
 import cv2
-
-# # Initialize Faker for realistic data generation
-# fake = Faker()
-
-# def populate_db():
-#     connection = sqlite3.connect('exam_portal.db')
-#     cursor = connection.cursor()
-
-#     # Insert Users (Admins and Students)
-#     users = []
-#     for _ in range(5):  # Admins
-#         users.append((fake.name(), fake.email(), fake.password(), 'admin'))
-#     for _ in range(15):  # Students
-#         users.append((fake.name(), fake.email(), fake.password(), 'student'))
-#     cursor.executemany("""
-#         INSERT INTO users (full_name, email, password_hash, role) VALUES (?, ?, ?, ?)""", users)
-    
-#     # Fetch inserted user IDs
-#     cursor.execute("SELECT user_id FROM users WHERE role='admin'")
-#     admin_ids = [row[0] for row in cursor.fetchall()]
-#     cursor.execute("SELECT user_id FROM users WHERE role='student'")
-#     student_ids = [row[0] for row in cursor.fetchall()]
-    
-#     # Insert Exams
-#     subjects = ['Mathematics', 'Physics', 'Chemistry', 'Computer Science', 'Biology']
-#     exams = []
-#     for _ in range(10):
-#         exams.append((
-#             fake.sentence(nb_words=3),
-#             fake.date_time_between(start_date='-30d', end_date='+30d').strftime('%Y-%m-%d %H:%M:%S'),
-#             random.randint(30, 180),
-#             random.choice(subjects),
-#             random.choice(admin_ids)
-#         ))
-#     cursor.executemany("""
-#         INSERT INTO exams (exam_name, exam_date, duration, subject, created_by) VALUES (?, ?, ?, ?, ?)""", exams)
-    
-#     # Fetch inserted exam IDs
-#     cursor.execute("SELECT exam_id FROM exams")
-#     exam_ids = [row[0] for row in cursor.fetchall()]
-    
-#     # Insert Questions
-#     questions = []
-#     for exam_id in exam_ids:
-#         for _ in range(5):  # 5 questions per exam
-#             question_type = random.choice(['mcq', 'descriptive'])
-#             options = json.dumps([fake.word() for _ in range(4)]) if question_type == 'mcq' else None
-#             correct_answer = random.choice(json.loads(options)) if options else fake.sentence()
-#             questions.append((exam_id, fake.sentence(), question_type, options, correct_answer))
-#     cursor.executemany("""
-#         INSERT INTO questions (exam_id, question_text, question_type, options, correct_answer) VALUES (?, ?, ?, ?, ?)""", questions)
-    
-#     # Fetch inserted question IDs
-#     cursor.execute("SELECT question_id, options FROM questions")
-#     question_data = cursor.fetchall()
-    
-#     # Insert Responses
-#     responses = []
-#     for student_id in student_ids:
-#         for exam_id in random.sample(exam_ids, k=5):  # Each student takes 5 exams
-#             for question_id, options in random.sample(question_data, k=3):  # Each student answers 3 questions per exam
-#                 if options:
-#                     option_list = json.loads(options)
-#                     selected_option = random.choice(option_list)
-#                     response_text = None
-#                 else:
-#                     selected_option = None
-#                     response_text = fake.sentence()
-#                 responses.append((exam_id, student_id, question_id, response_text, selected_option))
-#     cursor.executemany("""
-#         INSERT INTO responses (exam_id, user_id, question_id, response_text, selected_option) VALUES (?, ?, ?, ?, ?)""", responses)
-    
-#     # Insert Results
-#     results = []
-#     for student_id in student_ids:
-#         for exam_id in random.sample(exam_ids, k=5):
-#             results.append((exam_id, student_id, random.randint(0, 100), random.randint(600, 5400)))
-#     cursor.executemany("""
-#         INSERT INTO results (exam_id, user_id, total_score, time_taken) VALUES (?, ?, ?, ?)""", results)
-    
-#     # Commit and close connection
-#     connection.commit()
-#     connection.close()
-
-# populate_db()
-# print("Database populated successfully!")
+import base64
+from io import BytesIO
 
 app = Flask(__name__)
 app.secret_key = 'Venky@123'
 # Function to create the database and tables
 def create_db():
-    connection = sqlite3.connect('exam_portal.db')
+    connection = sqlite3.connect('instance1.db')
     cursor = connection.cursor()
 
-    # Create Users table
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            full_name TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            role TEXT CHECK(role IN ('admin', 'student')) NOT NULL
-        )
-    ''')
-
-    # Create Exams table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS exams (
-            exam_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            exam_name TEXT NOT NULL,
-            exam_date DATETIME NOT NULL,
-            duration INTEGER NOT NULL,
-            subject TEXT NOT NULL,
-            created_by INTEGER,
-            FOREIGN KEY (created_by) REFERENCES users(user_id)
-        )
-    ''')
-
-    # Create Questions table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS questions (
-            question_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            exam_id INTEGER,
-            question_text TEXT NOT NULL,
-            question_type TEXT CHECK(question_type IN ('mcq', 'descriptive')) NOT NULL,
-            options TEXT,  -- For storing options as JSON (optional)
-            correct_answer TEXT NOT NULL,
-            FOREIGN KEY (exam_id) REFERENCES exams(exam_id)
-        )
-    ''')
-
-    # Create Responses table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS responses (
-            response_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            exam_id INTEGER,
-            user_id INTEGER,
-            question_id INTEGER,
-            response_text TEXT,
-            selected_option TEXT,
-            FOREIGN KEY (exam_id) REFERENCES exams(exam_id),
-            FOREIGN KEY (user_id) REFERENCES users(user_id),
-            FOREIGN KEY (question_id) REFERENCES questions(question_id)
-        )
-    ''')
-
-    # Create Results table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS results (
-            result_id INTEGER PRIMARY KEY AUTOINCREMENT,
-            exam_id INTEGER,
-            user_id INTEGER,
-            total_score INTEGER NOT NULL,
-            time_taken INTEGER NOT NULL,  -- Time in seconds
-            FOREIGN KEY (exam_id) REFERENCES exams(exam_id),
-            FOREIGN KEY (user_id) REFERENCES users(user_id)
-        )
+    CREATE TABLE IF NOT EXISTS students (
+    student_id INTEGER PRIMARY KEY AUTOINCREMENT, -- Unique ID for each student
+    full_name TEXT NOT NULL,                     -- Full name of the student
+    mobile TEXT NOT NULL,                        -- Mobile number of the student
+    branch TEXT NOT NULL,                        -- Branch/Department of the student (e.g., "CSE", "ECE")
+    year INTEGER NOT NULL,                       -- Year of study (e.g., 1, 2, 3, 4)
+    gender TEXT NOT NULL,                        -- Gender of the student (e.g., "Male", "Female", "Other")
+    photo BLOB,                                  -- Student's photo stored as a BLOB (Binary Large Object)
+    abc_id TEXT UNIQUE NOT NULL,                 -- Unique ABC ID for the student
+    mail TEXT UNIQUE NOT NULL,                   -- Email address of the student
+    password TEXT NOT NULL,                      -- Encrypted password for authentication
+    role TEXT NOT NULL CHECK (role IN ('student', 'faculty', 'admin')) -- Role: 'student' or 'admin'
+);
+    
     ''')
 
     # Commit the changes and close the connection
     connection.commit()
     connection.close()
 
+create_db()
+# Function to convert image to binary data
+def convert_to_binary(filename):
+    with open(filename, 'rb') as file:
+        return file.read()
+
+
 def get_db_connection():
-    conn = sqlite3.connect('exam_portal.db')  # Timeout to avoid lock
+    conn = sqlite3.connect('instance1.db')  # Timeout to avoid lock
     conn.row_factory = sqlite3.Row
     return conn
 
+user_data = {
+    'student_id': None,
+    'full_name': None,
+    'mobile': None,
+    'branch': None,
+    'year': None,
+    'gender': None,
+    'abc_id': None,
+    'email': None,
+    'photo': None
+}
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -185,21 +70,49 @@ def login():
             return render_template('Login.html')
 
         with get_db_connection() as conn:
+            global user_data
             cursor = conn.cursor()
             cursor.execute("""
-                    SELECT * FROM users WHERE (full_name = ? OR email = ?) AND password_hash = ?
+                    SELECT * FROM students WHERE (full_name = ? OR mail = ?) AND password = ?
                 """, (username,username, password))
             user = cursor.fetchone()
             print(user)
 
             if user:
                 # Extract user details and set session variables
-                session['user_id'] = user[0]
-                session['username'] = user[1]
-                session['email'] = user[2]
-                session['role'] = user[4]
-                print(session['user_id'],session['username'],session['email'],session['role'])
-                return render_template('Homepage.html')
+                session['student_id'] = user[0]
+                session['full_name'] = user[1]
+                session['mobile'] = user[2]
+                session['branch'] = user[3]
+                session['year'] = user[4]
+                session['gender'] = user[5]
+                session['abc_id'] = user[7]
+                session['email'] = user[8]
+                session['role'] = user[9]
+
+                #storing in global 
+                user_data['student_id'] = session['student_id']
+                user_data['full_name'] = session['full_name']
+                user_data['mobile'] = session['mobile']
+                user_data['branch'] = session['branch']
+                user_data['year'] = session['year']
+                user_data['gender'] = session['gender']
+                user_data['abc_id'] = session['abc_id']
+                user_data['email'] = session['email']
+                with get_db_connection() as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        SELECT photo FROM students WHERE student_id = ?
+                    """, (session['student_id'],))
+                    photo_data = cursor.fetchone()
+
+                    if photo_data and photo_data[0]:
+                        # Convert binary data to base64 string
+                        base64_image = base64.b64encode(photo_data[0]).decode('utf-8')
+                        user_data['photo'] = base64_image
+                    else:
+                        user_data['photo'] = None
+                return render_template('Homepage.html',user = user_data)
             else:
                 flash("Invalid username",'danger')
                 return render_template('Login.html')
@@ -207,7 +120,7 @@ def login():
 
 @app.route('/index')
 def index():
-    return render_template('Homepage.html')
+    return render_template('Homepage.html',user = user_data)
 
 
 @app.route('/details',methods=['POST'])
@@ -219,14 +132,37 @@ def details():
         return render_template('Homepage.html')
     return render_template('Login.html')
 
-@app.route('/signup')
-def signup():
-    return render_template('SignUp.html')
-
 @app.route('/view_profile')
 def view_profile():
-    user = {'username':session['username'],'email':session['email'] ,'role':session['role']}
-    return render_template('viewprofile.html',user = user)
+    # Retrieve data from session
+    user_data = {
+        'student_id': session.get('student_id'),
+        'full_name': session.get('full_name'),
+        'mobile': session.get('mobile'),
+        'branch': session.get('branch'),
+        'year': session.get('year'),
+        'gender': session.get('gender'),
+        'abc_id': session.get('abc_id'),
+        'email': session.get('email'),
+        'role': session.get('role')
+    }
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT photo FROM students WHERE student_id = ?
+        """, (session['student_id'],))
+        photo_data = cursor.fetchone()
+
+        if photo_data and photo_data[0]:
+            # Convert binary data to base64 string
+            base64_image = base64.b64encode(photo_data[0]).decode('utf-8')
+            user_data['photo'] = base64_image
+        else:
+            user_data['photo'] = None
+
+    
+    # Render the template and pass the user data
+    return render_template('viewprofile.html', user=user_data)
 
 # Route to create the database and tables (you can call this when setting up)
 @app.route('/create_db')
@@ -236,7 +172,7 @@ def setup_db():
 
 @app.route('/Exams')
 def exams():
-    return render_template('Exam.html')
+    return render_template('Exam.html',user = user_data)
 
 @app.route('/Maths_Exam')
 def maths_exam():
@@ -244,7 +180,7 @@ def maths_exam():
 
 @app.route('/Results')
 def results():
-    return render_template('Results.html')
+    return render_template('Results.html',user = user_data)
 
 @app.route('/logout')
 def logout():
