@@ -221,11 +221,13 @@ while cap.isOpened():
             continous_eye_left=0
         
         if continous_eye_left>4 and (current_time - last_warning_time) > warning_interval:
+            print("Looking left")
             engine.say("Warning looking left")
             engine.runAndWait()
             last_warning_time = current_time
             continue
         if continous_eye_right>4 and (current_time - last_warning_time) > warning_interval:
+            print("Looking right")
             engine.say("Warning looking right")
             engine.runAndWait()
             last_warning_time = current_time
