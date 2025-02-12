@@ -122,7 +122,7 @@
 
       <div class="input-container">
         <input type="password" id="password" placeholder="Password" name="password" required>
-        <img src="Pics/show_password.png" class="toggle-password" id="toggle-password" alt="Toggle Password">
+        <img src="static/Pics/show_password.png" class="toggle-password" id="toggle-password" alt="Toggle Password">
       </div>
 
       <button type="submit">Login</button>
@@ -137,17 +137,17 @@
     let isPasswordVisible = false;
 
     togglePassword.addEventListener("mouseenter", () => {
-      togglePassword.src = isPasswordVisible ? "Pics/hide_password_hover.png" : "Pics/show_password_hover.png";
+      togglePassword.src = isPasswordVisible ? "static/Pics/hide_password_hover.png" : "static/Pics/show_password_hover.png";
     });
 
     togglePassword.addEventListener("mouseleave", () => {
-      togglePassword.src = isPasswordVisible ? "Pics/hide_password.png" : "Pics/show_password.png";
+      togglePassword.src = isPasswordVisible ? "static/Pics/hide_password.png" : "static/Pics/show_password.png";
     });
 
     togglePassword.addEventListener("click", () => {
       isPasswordVisible = !isPasswordVisible;
       passwordField.type = isPasswordVisible ? "text" : "password";
-      togglePassword.src = isPasswordVisible ? "Pics/hide_password_hover.png" : "Pics/show_password_hover.png";
+      togglePassword.src = isPasswordVisible ? "static/Pics/hide_password_hover.png" : "static/Pics/show_password_hover.png";
     });
   </script>
 </body>
