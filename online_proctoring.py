@@ -43,27 +43,27 @@ def get_gaze_direction(eye):
     cx = int(M["m10"] / M["m00"])  # Center of the contour
     eye_width = x_max - x_min
   
-    # # Determine direction based on iris position for 3 parts
-    # if cx < eye_width // 3:
-    #     return "Left"
-    # elif cx > 2 * eye_width // 3:
-    #     return "Right"
-    # else:
-    #     return "Center"
-    
-    # Divide the eye into 5 parts
-    left_most = eye_width // 5  # 1/5 of the eye width (first segment)
-    left_mid = 2 * eye_width // 5  # 2/5 of the eye width (second segment)
-    right_mid = 3 * eye_width // 5  # 3/5 of the eye width (fourth segment)
-    right_most = 4 * eye_width // 5  # 4/5 of the eye width (fifth segment)
-
-    # Determine gaze direction based on iris position for 5 parts
-    if cx < left_mid:  # Leftmost two sections
+    # Determine direction based on iris position for 3 parts
+    if cx < eye_width // 3:
         return "Left"
-    elif cx > right_mid:  # Rightmost two sections
+    elif cx > 2 * eye_width // 3:
         return "Right"
-    else:  # Center section
+    else:
         return "Center"
+    
+    # # Divide the eye into 5 parts
+    # left_most = eye_width // 5  # 1/5 of the eye width (first segment)
+    # left_mid = 2 * eye_width // 5  # 2/5 of the eye width (second segment)
+    # right_mid = 3 * eye_width // 5  # 3/5 of the eye width (fourth segment)
+    # right_most = 4 * eye_width // 5  # 4/5 of the eye width (fifth segment)
+
+    # # Determine gaze direction based on iris position for 5 parts
+    # if cx < left_mid:  # Leftmost two sections
+    #     return "Left"
+    # elif cx > right_mid:  # Rightmost two sections
+    #     return "Right"
+    # else:  # Center section
+    #     return "Center"
     
 
 # Load dlib's face detector and facial landmark predictor
@@ -92,7 +92,7 @@ frame_count = 0
 
 # Timers to prevent rapid repeated warnings
 last_warning_time = 0
-warning_interval = 4  # Minimum gap between two warnings (in seconds)
+warning_interval = 2  # Minimum gap between two warnings (in seconds)
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -111,13 +111,15 @@ while cap.isOpened():
 
     #Face detection warnings
     if(len(faces)==0) and (current_time - last_warning_time) > warning_interval:
-        engine.say("Warning, No face detected.")
-        engine.runAndWait()
+        # engine.say("Warning, No face detected.")
+        # engine.runAndWait()
+        print("No face detected")
         last_warning_time = current_time
         continue
     if len(faces)>1 and (current_time - last_warning_time) > warning_interval:
-        engine.say("Warning Multiple faces detected.")
-        engine.runAndWait()
+        # engine.say("Warning Multiple faces detected.")
+        # engine.runAndWait()
+        print("Multiple face detected")
         last_warning_time = current_time
         continue
         
@@ -127,8 +129,8 @@ while cap.isOpened():
     detected_objects = [model.names[int(box.cls)] for box in results[0].boxes]
     if "cell phone" in detected_objects and (current_time - last_warning_time) > warning_interval:
         print("Phone Detected")
-        engine.say("Warning! Phone detected")
-        engine.runAndWait()
+        # engine.say("Warning! Phone detected")
+        # engine.runAndWait()
         last_warning_time = current_time
         continue
     # Show only if necessary
@@ -155,11 +157,11 @@ while cap.isOpened():
         # cv2.polylines(frame, [right_eye], True, (0, 255, 0), 1
         
         # Determine left or right movement
-        if nose[0] < face_center_x - 10:
+        if nose[0] < face_center_x - 12:
             direction = "Turned Left"
             continous_left+=1
             continous_right=0      
-        elif nose[0] > face_center_x + 10:
+        elif nose[0] > face_center_x + 12:
             direction = "Turned Right"
             continous_right+=1      
             continous_left=0      
@@ -181,8 +183,8 @@ while cap.isOpened():
             continous_eye_right=0
             continous_eye_left=0
             print('turned left')
-            engine.say("Warning turned left")
-            engine.runAndWait()
+            # engine.say("Warning turned left")
+            # engine.runAndWait()
             last_warning_time = current_time
             continue
 
@@ -190,8 +192,8 @@ while cap.isOpened():
             continous_eye_right=0
             continous_eye_left=0
             print('turned right')
-            engine.say("Warning turned right")
-            engine.runAndWait()
+            # engine.say("Warning turned right")
+            # engine.runAndWait()
             last_warning_time = current_time
             continue
  
@@ -222,14 +224,14 @@ while cap.isOpened():
         
         if continous_eye_left>4 and (current_time - last_warning_time) > warning_interval:
             print("Looking left")
-            engine.say("Warning looking left")
-            engine.runAndWait()
+            # engine.say("Warning looking left")
+            # engine.runAndWait()
             last_warning_time = current_time
             continue
         if continous_eye_right>4 and (current_time - last_warning_time) > warning_interval:
             print("Looking right")
-            engine.say("Warning looking right")
-            engine.runAndWait()
+            # engine.say("Warning looking right")
+            # engine.runAndWait()
             last_warning_time = current_time
             continue
 
