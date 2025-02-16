@@ -4,8 +4,18 @@ import pyttsx3
 import numpy as np
 from ultralytics import YOLO
 import time
+import mysql.connector
 import logging
 logging.getLogger("ultralytics").setLevel(logging.WARNING)  # Hides unnecessary info
+
+# MySQL connection setup
+db = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="",
+    database="Exam"
+)
+cursor = db.cursor()
 
 # Function to compute eye aspect ratio (optional for blinking detection)
 def eye_aspect_ratio(eye):
@@ -80,7 +90,7 @@ cap.set(3, 640)  # Width
 cap.set(4, 480)  # Height
 
 # Store previous direction to avoid repeated prints
-prev_direction = None
+# prev_direction = None
 engine=pyttsx3.init()
 continous_right=0
 continous_left=0
@@ -94,12 +104,51 @@ frame_count = 0
 last_warning_time = 0
 warning_interval = 2  # Minimum gap between two warnings (in seconds)
 
+# Recording parameters
+recording = False
+record_start_time = None
+video_frames = []
+violation=None
+
+# Function to start recording
+def start_recording(issue):
+    global recording, record_start_time, video_frames,violation
+    violation=issue
+    if not recording:
+        record_start_time = time.time()
+        video_frames = []  # Clear frames buffer
+        recording = True
+
+# Function to stop recording and save to DB
+def stop_recording():
+    global recording, video_frames,violation
+    if recording:
+        recording = False
+        
+        # Convert video frames to a single video file (in memory)
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        temp_filename = "temp.mp4"  # Temporary file to store in memory
+        out = cv2.VideoWriter(temp_filename, fourcc, 20.0, (640, 480))
+        
+        for frame in video_frames:
+            out.write(frame)
+        out.release()
+        
+        # Read the file into binary data
+        with open(temp_filename, "rb") as f:
+            video_blob = f.read()
+
+        # Insert into MySQL database
+        cursor.execute("INSERT INTO violations (studentid,subjectid,assesmentid,video,violation) VALUES (%s,%s,%s,%s,%s)", ('n200514',2,2,video_blob,violation))
+        db.commit()
+        print("Violation clip stored in database")
+
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
         break
     
-    frame_count += 1
+    # frame_count += 1
     if frame_count % frame_skip != 0:  # Skip frames to reduce processing load
         continue
     
@@ -113,12 +162,14 @@ while cap.isOpened():
     if(len(faces)==0) and (current_time - last_warning_time) > warning_interval:
         # engine.say("Warning, No face detected.")
         # engine.runAndWait()
+        start_recording("No face detected")
         print("No face detected")
         last_warning_time = current_time
         continue
     if len(faces)>1 and (current_time - last_warning_time) > warning_interval:
         # engine.say("Warning Multiple faces detected.")
         # engine.runAndWait()
+        start_recording("Multiple face detected")
         print("Multiple face detected")
         last_warning_time = current_time
         continue
@@ -128,6 +179,7 @@ while cap.isOpened():
     # Check if a phone is detected
     detected_objects = [model.names[int(box.cls)] for box in results[0].boxes]
     if "cell phone" in detected_objects and (current_time - last_warning_time) > warning_interval:
+        start_recording("Phone Detected")
         print("Phone Detected")
         # engine.say("Warning! Phone detected")
         # engine.runAndWait()
@@ -142,7 +194,7 @@ while cap.isOpened():
         # Extract key landmark points
         nose = (landmarks.part(30).x, landmarks.part(30).y)  # Nose tip
         face_center_x = (face.left() + face.right()) // 2
-        face_center_y = (face.top() + face.bottom()) // 2
+        # face_center_y = (face.top() + face.bottom()) // 2
         # print('(',face_center_x,face_center_y,')',end=" ")
         
         # Get left and right eye regions
@@ -166,7 +218,7 @@ while cap.isOpened():
             continous_right+=1      
             continous_left=0      
         else:
-            prev_direction=None
+            # prev_direction=None
             continous_left=0      
             continous_right=0      
         # # Determine up or down movementq
@@ -176,12 +228,13 @@ while cap.isOpened():
         #     direction = "Turned Down"
 
         # Print only if the direction has changed
-        if direction and direction != prev_direction:
+        # if direction and direction != prev_direction:
             # print(direction)
-            prev_direction = direction  # Update previous direction
+            # prev_direction = direction  # Update previous direction
         if continous_left>4 and (current_time - last_warning_time) > warning_interval:
             continous_eye_right=0
             continous_eye_left=0
+            start_recording("Turned left")
             print('turned left')
             # engine.say("Warning turned left")
             # engine.runAndWait()
@@ -191,6 +244,7 @@ while cap.isOpened():
         if continous_right>4 and (current_time - last_warning_time) > warning_interval:
             continous_eye_right=0
             continous_eye_left=0
+            start_recording("Turned right")
             print('turned right')
             # engine.say("Warning turned right")
             # engine.runAndWait()
@@ -223,18 +277,25 @@ while cap.isOpened():
             continous_eye_left=0
         
         if continous_eye_left>4 and (current_time - last_warning_time) > warning_interval:
+            start_recording("Looking left")
             print("Looking left")
             # engine.say("Warning looking left")
             # engine.runAndWait()
             last_warning_time = current_time
             continue
         if continous_eye_right>4 and (current_time - last_warning_time) > warning_interval:
+            start_recording("Looking right")
             print("Looking right")
             # engine.say("Warning looking right")
             # engine.runAndWait()
             last_warning_time = current_time
             continue
-
+        
+    # If recording, store frames in buffer
+    if recording:
+        video_frames.append(frame)
+        if (current_time - record_start_time) > 4:
+            stop_recording()
 
     cv2.imshow("Face Direction Detection", frame)
 
@@ -243,3 +304,4 @@ while cap.isOpened():
 
 cap.release()
 cv2.destroyAllWindows()
+db.close()
