@@ -1,1 +1,0 @@
-print("20 student records inserted successfully with images!")
