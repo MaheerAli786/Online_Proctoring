@@ -1,5 +1,10 @@
 import mysql.connector
 import requests
+import hashlib
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
 
 def insert_student_data(studentid, name, password, email, gender, year, contact):
     try:
@@ -32,5 +37,13 @@ def insert_student_data(studentid, name, password, email, gender, year, contact)
         cursor.close()
         conn.close()
 
+studentid = "n200963"
+name = "Adnan Sami"
+password = "Sami@123"
+email = "n200963@rguktn.ac.in"
+gender = "Male"
+year = 3
+contact = "6304692429"
+hashed_pwd = hash_password(password)
 # Calling function with correct arguments
-insert_student_data("n200963", "Adnan Sami", "Sami@123", "n200963@rguktn.ac.in", "Male", 3, "6304692429")
+insert_student_data(studentid, name, hashed_pwd, email, gender, year, contact)

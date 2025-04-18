@@ -5,6 +5,7 @@ import base64
 import traceback
 import os
 import subprocess
+import hashlib
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Required for session handling
@@ -16,6 +17,8 @@ def get_db_connection():
         password="",
         database="Exam"
     )
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
 
 # Default route redirects to home
 @app.route('/')
@@ -36,7 +39,7 @@ def login():
             if role == 'student':
                 cursor.execute("SELECT * FROM Student WHERE email = %s", (email,))
                 user = cursor.fetchone()
-                if user and user['password'] == password:
+                if user and user['password'] == hash_password(password):
                     session['user'] = {
                         'id': user['studentid'],
                         'name': user['name'],
@@ -54,7 +57,7 @@ def login():
             elif role == 'faculty':
                 cursor.execute("SELECT * FROM Faculty WHERE email = %s", (email,))
                 user = cursor.fetchone()
-                if user and user['password'] == password:
+                if user and user['password'] == hash_password(password):
                     session['user'] = {
                         'id': user['facultyid'],
                         'name': user['name'],
