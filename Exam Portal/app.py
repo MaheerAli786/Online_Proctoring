@@ -6,6 +6,11 @@ import traceback
 import os
 import subprocess
 import hashlib
+import threading
+
+def drain_output(pipe, tag=""):
+    for line in pipe:
+        print(f"[{tag}] {line.strip()}")
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Required for session handling
@@ -288,6 +293,8 @@ def start_proctoring():
             line = proctoring_process.stdout.readline()
             print("Proctoring:", line.strip())
             if "Running Successfully" in line:
+                threading.Thread(target=drain_output, args=(proctoring_process.stdout, "STDOUT"), daemon=True).start()
+                threading.Thread(target=drain_output, args=(proctoring_process.stderr, "STDERR"), daemon=True).start()
                 return jsonify({"status": "started"})
             if line == '' and proctoring_process.poll() is not None:
                 break  # Process ended unexpectedly
