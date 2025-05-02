@@ -170,6 +170,8 @@ def get_exams():
         
 @app.route("/delete_exam", methods=["POST"])
 def delete_exam():
+    if 'user' not in session or session['user']['role'] != 'faculty':
+        return jsonify({"error": "Unauthorized access"}), 403
     try:
         data = request.json
         print("Received Delete Request:", data)  # Debugging
